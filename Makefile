@@ -1,12 +1,14 @@
-all: lex.yy.c resume.tab.c
-	gcc lex.yy.c resume.tab.c -o res2html
+all: cv2html
+
+cv2html: lex.yy.c cv2html.tab.c
+	gcc $^ -o $@
 
 clean:
-	rm lex.yy.c resume.tab.c resume.tab.h resume.output
+	rm lex.yy.c cv2html.tab.c cv2html.tab.h cv2html.output
 
-lex.yy.c: resume.l
-	flex resume.l
+lex.yy.c: cv2html.l
+	flex $^
 
-resume.tab.c: resume.y
-	bison -W -v -d resume.y
+cv2html.tab.c: cv2html.y
+	bison -W -v -d $^
 

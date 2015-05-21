@@ -1,6 +1,6 @@
 %{
 #include "stdio.h"
-#include "resume.tab.h"
+#include "cv2html.tab.h"
 
 int parent;
 %}
