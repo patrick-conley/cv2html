@@ -58,8 +58,8 @@ int parent;
 
 <*>\\[a-z]+          { return MACRO; }
 
-<INITIAL>[^\[\]{}%$\n\t\\\-]+ { yylval.str = strdup(yytext); return TEXT; }
-<LIST>[^\[\]{}%\$\\\-]+       { yylval.str = strdup(yytext); return TEXT; }
+<INITIAL>[^\[\]{}%$\\\-]+  { yylval.str = strdup(yytext); return TEXT; }
+<LIST>[^\[\]{}%\$\\\-]+    { yylval.str = strdup(yytext); return TEXT; }
 
 %%
 

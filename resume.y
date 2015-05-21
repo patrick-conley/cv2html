@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <regex.h>
 
 extern int yylineno;
 
@@ -45,6 +47,7 @@ contents : %empty
          | contents cventry
          | contents cvlist
          | contents macro
+         | contents string { printf("%s", $2); free($2); }
          ;
 
 section  : SECTION arg     {
@@ -73,8 +76,9 @@ cvlistitems : CVLIST arg arg
                               $$ = malloc(1000);
                               strcpy($$, "<li>");
                               strcat($$, $2);
-                              strcat($$, "<li>");
+                              strcat($$, "\n<li>");
                               strcat($$, $3);
+                              strcat($$, "\n");
                               free($2);
                               free($3);
                            }
@@ -82,8 +86,9 @@ cvlistitems : CVLIST arg arg
                            {
                               strcat($1, "<li>");
                               strcat($1, $3);
-                              strcat($1, "<li>");
+                              strcat($1, "\n<li>");
                               strcat($1, $4);
+                              strcat($1, "\n");
                               free($3);
                               free($4);
                            }
@@ -96,7 +101,7 @@ cventry  : CVENTRY arg arg arg arg arg arg
                               printf("<em>%s</em>", $4);
                               if (strlen($5) || strlen($6) || strlen($7))
                                  printf(",");
-                              printf("\n%s\n%s\n</br>%s\n", $5, $6, $7);
+                              printf("\n%s\n%s\n</br>\n%s\n", $5, $6, $7);
                               free($2);
                               free($3);
                               free($4);
@@ -182,7 +187,33 @@ stringseq : %empty         {
                            }
          ;
 
-string   : TEXT            { $$ = strdup($1); }
+string   : TEXT      {
+                        $$ = malloc(strlen($1)+21);
+                        $$[0] = 0;
+                        char* input = strdup($1);
+
+                        regex_t regex;
+                        regcomp(&regex, "\n\\s*\n", 0);
+
+                        // Find a match, print up to it, and replace it
+                        // with a paragraph break
+                        regmatch_t matches[1];
+                        int start = 0;
+                        while (!regexec(&regex, input+start, 1, matches, 0)) {
+                           input[start+matches[0].rm_so] = 0;
+                           strcat($$, input+start);
+                           strcat($$, "\n<p>");
+                           start += matches[0].rm_eo;
+                        }
+
+                        // Print trailing text
+                        if (strlen(input+start) > 0) {
+                           strcat($$, input+start);
+                        }
+
+                        regfree(&regex);
+                        free(input);
+                     }
          | math            { $$ = $1; }
          | url             { $$ = $1; }
          ;
