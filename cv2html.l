@@ -1,5 +1,4 @@
 %{
-#include "stdio.h"
 #include "cv2html.tab.h"
 
 int parent;
