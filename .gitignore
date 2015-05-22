@@ -2,3 +2,4 @@
 *.tab.h
 *.output
 lex.yy.c
+cv2html
