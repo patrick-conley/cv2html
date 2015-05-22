@@ -46,10 +46,18 @@ int parent;
 <LIST>\\end\{itemize\}        { BEGIN(parent); return RLIST; }
 <LIST>\\item                  { return ITEM; }
 
+\\makelettertitle    { return CVLETTEROPEN; }
+\\makeletterclosing  { return CVLETTERCLOSE; }
+
 \\section            { return SECTION; }
 \\cvitem             { return CVITEM; }
 \\cvlistdoubleitem   { return CVLIST; }
 \\cventry            { return CVENTRY; }
+
+\\firstname          { yylval.str = strdup(yytext); return CVDATA; }
+\\familyname           { yylval.str = strdup(yytext); return CVDATA; }
+\\opening            { yylval.str = strdup(yytext); return CVDATA; }
+\\closing            { yylval.str = strdup(yytext); return CVDATA; }
 
 \\newline            { yylval.str = "</br>\n"; return TEXT; }
 \\url                { return URL; }

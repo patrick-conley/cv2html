@@ -7,6 +7,11 @@
 
 extern int yylineno;
 
+char* opening = NULL;
+char* closing = NULL;
+char* firstname = NULL;
+char* lastname = NULL;
+
 void yyerror(const char *str)
 {
    fprintf(stderr,"error: %d %s\n", yylineno, str);
@@ -31,13 +36,14 @@ main()
 %define parse.error verbose
 
 %token TEXT
-%token SECTION CVITEM CVLIST CVENTRY URL MACRO
+%token CVITEM CVLIST CVENTRY CVDATA CVLETTEROPEN CVLETTERCLOSE
+%token SECTION URL MACRO
 %token DELIM
 %token LLIST RLIST ITEM
 %token LBRACE RBRACE LBRACKET RBRACKET
 
 %type<str> TEXT strings string list items math arg opt stringseq url
-%type<str> mathstrings cvlistitems
+%type<str> mathstrings cvlistitems CVDATA
 
 %%
 
@@ -46,6 +52,9 @@ contents : %empty
          | contents cvitem
          | contents cventry
          | contents cvlist
+         | contents cvdata
+         | contents cvletteropen
+         | contents cvletterclose
          | contents macro
          | contents string { printf("%s", $2); free($2); }
          ;
@@ -109,6 +118,38 @@ cventry  : CVENTRY arg arg arg arg arg arg
                               free($6);
                               free($7);
                            }
+
+cvdata   : CVDATA arg      {
+                              if (!strcmp($1, "\\opening")) {
+                                 opening = $2;
+                              } else if (!strcmp($1, "\\closing")) {
+                                 closing = $2;
+                              } else if (!strcmp($1, "\\firstname")) {
+                                 firstname = $2;
+                              } else if (!strcmp($1, "\\familyname")) {
+                                 lastname = $2;
+                              }
+                           }
+         ;
+
+cvletteropen : CVLETTEROPEN arg
+                           {
+                              if (opening != NULL) {
+                                 printf("<p>%s\n", opening);
+                              }
+                           }
+         ;
+
+cvletterclose : CVLETTERCLOSE arg
+                           {
+                              if (closing != NULL) {
+                                 printf("<p>%s\n", closing);
+                                 if (firstname != NULL && lastname != NULL) {
+                                    printf("</br>%s %s\n", firstname, lastname);
+                                 }
+                              }
+                           }
+         ;
 
 /* discarded */
 macro    : MACRO opts args
@@ -239,5 +280,11 @@ mathstrings : %empty       {
          ;
 
 url      : URL LBRACE stringseq RBRACE
-                           { $$ = $3; }
+                           {
+                              $$ = malloc(strlen($3)+10);
+                              strcpy($$, "<em>");
+                              strcat($$, $3);
+                              strcat($$, "</em>");
+                              free($3);
+                           }
          ;
