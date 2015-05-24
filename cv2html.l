@@ -1,22 +1,19 @@
 %{
 #include "cv2html.tab.h"
-
-int parent;
 %}
 
 %option yylineno
+%option warn
 
 %x MATH
-%s LIST
 
 %%
 
 [ \t\n]+             ;
 %.*                  ;
 
-<INITIAL>"$"         { BEGIN(MATH); parent = INITIAL; return DELIM; }
-<LIST>"$"            { BEGIN(MATH); parent = LIST; return DELIM; }
-<MATH>"$"            { BEGIN(parent); return DELIM; }
+<INITIAL>"$"         { BEGIN(MATH); return DELIM; }
+<MATH>"$"            { BEGIN(INITIAL); return DELIM; }
 
 <MATH>"\{"           { yylval.str = "("; return TEXT; }
 <MATH>"\}"           { yylval.str = ")"; return TEXT; }
@@ -41,10 +38,9 @@ int parent;
 "\\&"                { yylval.str = "&amp;"; return TEXT; }
 "\\\\"               ; /* newline (this version is ignored) */
 
-<INITIAL>\\begin\{itemize\}   { BEGIN(LIST); parent = INITIAL; return LLIST; }
-<LIST>\\begin\{itemize\}      { BEGIN(LIST); parent = LIST; return LLIST; }
-<LIST>\\end\{itemize\}        { BEGIN(parent); return RLIST; }
-<LIST>\\item                  { return ITEM; }
+\\begin\{itemize\}   { return LLIST; }
+\\end\{itemize\}     { return RLIST; }
+\\item               { return ITEM; }
 
 \\makelettertitle    { return CVLETTEROPEN; }
 \\makeletterclosing  { return CVLETTERCLOSE; }
@@ -55,7 +51,7 @@ int parent;
 \\cventry            { return CVENTRY; }
 
 \\firstname          { yylval.str = strdup(yytext); return CVDATA; }
-\\familyname           { yylval.str = strdup(yytext); return CVDATA; }
+\\familyname         { yylval.str = strdup(yytext); return CVDATA; }
 \\opening            { yylval.str = strdup(yytext); return CVDATA; }
 \\closing            { yylval.str = strdup(yytext); return CVDATA; }
 
@@ -65,8 +61,7 @@ int parent;
 
 <*>\\[a-z]+          { return MACRO; }
 
-<INITIAL>[^\[\]{}%$\\\-]+  { yylval.str = strdup(yytext); return TEXT; }
-<LIST>[^\[\]{}%\$\\\-]+    { yylval.str = strdup(yytext); return TEXT; }
+[^\[\]{}%$\\\-]+     { yylval.str = strdup(yytext); return TEXT; }
 
 %%
 

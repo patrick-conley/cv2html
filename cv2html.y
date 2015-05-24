@@ -5,6 +5,8 @@
 #include <sys/types.h>
 #include <regex.h>
 
+#include "macros.h"
+
 extern int yylineno;
 
 char* opening = NULL;
@@ -35,52 +37,46 @@ main()
 
 %define parse.error verbose
 
-%token TEXT
-%token CVITEM CVLIST CVENTRY CVDATA CVLETTEROPEN CVLETTERCLOSE
-%token SECTION URL MACRO
+%token SECTION CVLIST CVITEM CVENTRY CVLETTEROPEN CVLETTERCLOSE MACRO
+%token LBRACE RBRACE LBRACKET RBRACKET
 %token DELIM
 %token LLIST RLIST ITEM
-%token LBRACE RBRACE LBRACKET RBRACKET
+%token TEXT CVDATA URL
 
-%type<str> TEXT strings string list items math arg opt stringseq url
-%type<str> mathstrings cvlistitems CVDATA
+%type<str> section cvitem cventry cvdata cvletteropen cvletterclose
+%type<str> arg opt arg_contents
+%type<str> math math_contents
+%type<str> list listitems
+%type<str> cvlist cvlistdoubleitems
+%type<str> strings string url
+%type<str> TEXT CVDATA
 
 %%
 
 contents : %empty
-         | contents section
-         | contents cvitem
-         | contents cventry
-         | contents cvlist
+         | contents section   { printf("%s\n", $2); free($2); }
+         | contents cvitem    { printf("%s\n", $2); free($2); }
+         | contents cvlist    { printf("%s\n", $2); free($2); }
+         | contents cventry   { printf("%s\n", $2); free($2); }
+         | contents cvletteropen    { printf("%s\n", $2); free($2); }
+         | contents cvletterclose   { printf("%s\n", $2); free($2); }
+         | contents list      { printf("%s\n", $2); free($2); }
+         | contents string    { printf("%s", $2); free($2); }
          | contents cvdata
-         | contents cvletteropen
-         | contents cvletterclose
          | contents macro
-         | contents string { printf("%s", $2); free($2); }
          ;
 
-section  : SECTION arg     {
-                              printf("<p><p><strong><em>%s</em></strong>\n", $2);
-                              free($2);
-                           }
-         ;
+section  : SECTION arg     { $$ = section($2); free($2); }
 
-cvitem   : CVITEM arg arg  {
-                              printf("<p><strong>%s</strong><br>\n", $2);
-                              printf("%s\n", $3);
-                              free($2);
-                              free($3);
-                           }
+cvitem   : CVITEM arg arg  { $$ = cvitem($2, $3); free($2); free($3); }
 
-cvlist   : cvlistitems     {
-                              printf("<ul>%s</ul>", $1);
-                              free($1);
-                           }
-         ;
+cvlist   : cvlistdoubleitems  { $$ = cvlist($1); free($1); }
 
-cvlistitems : CVLIST arg arg
+cvlistdoubleitems : CVLIST arg arg
                /* Obvious shift/reduce conflict, but as cvlist types aren't at
-                * all delimited, I don't think that's avoidable. */
+                * all delimited, I don't think that's avoidable. An %empty
+                * rule just makes it worse.
+                */
                            {
                               $$ = malloc(1000);
                               strcpy($$, "<li>");
@@ -91,7 +87,7 @@ cvlistitems : CVLIST arg arg
                               free($2);
                               free($3);
                            }
-         | cvlistitems CVLIST arg arg
+         | cvlistdoubleitems CVLIST arg arg
                            {
                               strcat($1, "<li>");
                               strcat($1, $3);
@@ -105,18 +101,25 @@ cvlistitems : CVLIST arg arg
 
 cventry  : CVENTRY arg arg arg arg arg arg
                            {
-                              printf("<p>%s<br>\n", $2);
-                              printf("<strong>%s</strong>\n", $3);
-                              printf("<em>%s</em>", $4);
-                              if (strlen($5) || strlen($6) || strlen($7))
-                                 printf(",");
-                              printf("\n%s\n%s\n</br>\n%s\n", $5, $6, $7);
+                              $$ = cventry($2, $3, $4, $5, $6, $7);
                               free($2);
                               free($3);
                               free($4);
                               free($5);
                               free($6);
                               free($7);
+                           }
+
+cvletteropen : CVLETTEROPEN arg
+                           {
+                              $$ = cvletteropen(opening);
+                              free($2);
+                           }
+
+cvletterclose : CVLETTERCLOSE arg
+                           {
+                              $$ = cvletterclose(closing, firstname, lastname);
+                              free($2);
                            }
 
 cvdata   : CVDATA arg      {
@@ -130,38 +133,16 @@ cvdata   : CVDATA arg      {
                                  lastname = $2;
                               }
                            }
-         ;
-
-cvletteropen : CVLETTEROPEN arg
-                           {
-                              if (opening != NULL) {
-                                 printf("<p>%s\n", opening);
-                              }
-                           }
-         ;
-
-cvletterclose : CVLETTERCLOSE arg
-                           {
-                              if (closing != NULL) {
-                                 printf("<p>%s\n", closing);
-                                 if (firstname != NULL && lastname != NULL) {
-                                    printf("</br>%s %s\n", firstname, lastname);
-                                 }
-                              }
-                           }
-         ;
 
 /* discarded */
 macro    : MACRO opts args
-         ;
 
 /* discarded */
 args     : %empty
          | args arg        { free($2); }
          ;
 
-arg      : LBRACE strings RBRACE { $$ = $2; }
-         ;
+arg      : LBRACE arg_contents RBRACE { $$ = $2; }
 
 /* discarded */
 opts     : %empty
@@ -169,25 +150,25 @@ opts     : %empty
          ;
 
 /* discarded */
-opt      : LBRACKET strings RBRACKET { $$ = $2; }
+opt      : LBRACKET arg_contents RBRACKET { $$ = $2; }
          ;
 
-strings   : %empty         {
+arg_contents   : %empty         {
                               $$ = malloc(1000);
                               $$[0] = 0;
                            }
-         | strings string  {
+         | arg_contents string  {
                               strcat($1, $2);
                               free($2);
                               $$ = $1;
                            }
-         | strings list    {
+         | arg_contents list    {
                               strcat($1, $2);
                               $$ = $1;
                            }
          ;
 
-list     : LLIST items RLIST
+list     : LLIST listitems RLIST
                            {
                               $$ = malloc(strlen($2)+10);
                               strcpy($$, "<ul>");
@@ -197,16 +178,16 @@ list     : LLIST items RLIST
                            }
          ;
 
-items    : %empty          {
+listitems    : %empty          {
                               $$ = malloc(1000);
                               $$[0] = 0;
                            }
-         | items list      {
+         | listitems list      {
                               strcat($1, $2);
                               free($2);
                               $$ = $1;
                            }
-         | items ITEM stringseq
+         | listitems ITEM strings
                            {
                               strcat($1, "<li>");
                               strcat($1, $3);
@@ -216,11 +197,11 @@ items    : %empty          {
                            }
          ;
 
-stringseq : %empty         {
+strings : %empty         {
                               $$ = malloc(1000);
                               $$[0] = 0;
                            }
-         | stringseq string
+         | strings string
                            {
                               strcat($1, $2);
                               free($2);
@@ -259,7 +240,7 @@ string   : TEXT      {
          | url             { $$ = $1; }
          ;
 
-math     : DELIM mathstrings DELIM
+math     : DELIM math_contents DELIM
                            {
                               $$ = malloc(strlen($2)+10);
                               strcpy($$, "<em>");
@@ -268,18 +249,18 @@ math     : DELIM mathstrings DELIM
                               strcat($$, "</em>");
                            }
 
-mathstrings : %empty       {
+math_contents : %empty       {
                               $$ = malloc(1000);
                               $$[0] = 0;
                            }
-         | mathstrings TEXT
+         | math_contents TEXT
                            {
                               strcat($1, $2);
                               $$ = $1;
                            }
          ;
 
-url      : URL LBRACE stringseq RBRACE
+url      : URL LBRACE string RBRACE
                            {
                               $$ = malloc(strlen($3)+10);
                               strcpy($$, "<em>");

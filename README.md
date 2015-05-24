@@ -37,11 +37,8 @@ In `$`-delimited inline math:
 - `\sim`
 - `\times`
 
-Deeply nested lists¹, or text with lots of paragraphs² do not work
-properly. Unsupported macros, and their arguments, are simply ignored.
-
-¹ Requires a stack of previous states  
-² Requires reallocating memory
+Very long strings (macro arguments, lists, equations, text with many
+paragraphs) doesn't work properly (it requires I reallocate memory).
 
 Dependencies
 ------------

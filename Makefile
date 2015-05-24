@@ -1,6 +1,6 @@
 all: cv2html
 
-cv2html: lex.yy.c cv2html.tab.c
+cv2html: macros.c lex.yy.c cv2html.tab.c
 	gcc $^ -o $@
 
 clean:
