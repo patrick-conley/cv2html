@@ -3,9 +3,6 @@ cv2html
 
 Translate a resume/CV written in LaTeX+moderncv into basic HTML.
 
-It's a bit ugly; it's a bit brittle; it doesn't support many macros (right
-now), but it does the trick.
-
 Usage
 -----
 
@@ -37,8 +34,15 @@ In `$`-delimited inline math:
 - `\sim`
 - `\times`
 
-Very long strings (macro arguments, lists, equations, text with many
-paragraphs) doesn't work properly (it requires I reallocate memory).
+Output contains the following tags:
+
+- &lt;em&gt;
+- &lt;strong&gt;
+- &lt;span&gt;
+- &lt;ul&gt;
+- &lt;li&gt;
+- &lt;p&gt;
+- &lt;br&gt;
 
 Dependencies
 ------------

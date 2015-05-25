@@ -1,10 +1,12 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <regex.h>
 
 #include "macros.h"
 
-char* section(char* arg) {
+char* write_section(char* arg) {
    char* open = "<p><p><strong><em>";
    char* close = "</em></strong>";
 
@@ -14,10 +16,12 @@ char* section(char* arg) {
    strcat(out, arg);
    strcat(out, close);
 
+   free(arg);
+
    return out;
 }
 
-char* cvitem(char* header, char* contents) {
+char* write_cvitem(char* header, char* contents) {
    char* open = "<p><strong>";
    char* closeHeader = "</strong><br>\n";
 
@@ -30,12 +34,15 @@ char* cvitem(char* header, char* contents) {
    strcat(out, closeHeader);
    strcat(out, contents);
 
+   free(header);
+   free(contents);
+
    return out;
 }
 
-char* cvlist(char* contents) {
+char* write_list(char* contents) {
    char* open = "<ul>";
-   char* close = "</ul>";
+   char* close = "</ul>\n";
 
    char* out = malloc(strlen(open) + strlen(contents) + strlen(close) + 1);
 
@@ -43,11 +50,13 @@ char* cvlist(char* contents) {
    strcat(out, contents);
    strcat(out, close);
 
+   free(contents);
+
    return out;
 }
 
-char* cventry(char* date, char* title, char* group, char* place, char* note,
-      char* contents) {
+char* write_cventry(char* date, char* title, char* group, char* place, char*
+      note, char* contents) {
    char* format = "<p>%s<br>\n<strong>%s</strong>\n<em>%s</em>";
 
    char* out = malloc(strlen(date) + strlen(title) + strlen(group) +
@@ -55,28 +64,40 @@ char* cventry(char* date, char* title, char* group, char* place, char* note,
 
    sprintf(out, format, date, title, group);
 
+   free(date);
+   free(title);
+   free(group);
+
    if (strlen(place)) {
       strcat(out, ",\n");
       strcat(out, place);
    }
+
+   free(place);
 
    if (strlen(note)) {
       strcat(out, ",\n");
       strcat(out, note);
    }
 
+   free(note);
+
    strcat(out, ".<br>\n");
    strcat(out, contents);
 
+   free(contents);
+
    return out;
 }
 
-char* cvletteropen(char* message) {
+char* write_cvlettertitle(char* message) {
    char* out;
 
    if (message != NULL) {
-      out = malloc(strlen(opening) + 5);
-      sprintf(out, "<p>%s\n", opening);
+      out = malloc(strlen(message) + 5);
+      sprintf(out, "<p>%s\n", message);
+
+      free(message);
    } else {
       out = malloc(1);
       out[0] = 0;
@@ -85,19 +106,115 @@ char* cvletteropen(char* message) {
    return out;
 }
 
-char* cvletterclose(char* message, char* first, char* last) {
+char* write_cvletterclose(char* message, char* first, char* last) {
    char* out;
 
-   if (closing == NULL) {
+   if (message == NULL) {
       out = malloc(1);
       out[0] = 0;
    } else if (first != NULL && last != NULL) {
-      out = malloc(strlen(closing) + strlen(first) + strlen(last) + 11);
-      sprintf(out, "<p>%s<br>\n%s %s\n", closing, first, last);
+      out = malloc(strlen(message) + strlen(first) + strlen(last) + 11);
+      sprintf(out, "<p>%s<br>\n%s %s\n", message, first, last);
+      free(message);
    } else {
-      out = malloc(strlen(closing) + 5);
-      sprintf(out, "<p>%s\n", closing);
+      out = malloc(strlen(message) + 5);
+      sprintf(out, "<p>%s\n", message);
+      free(message);
    }
+
+   return out;
+}
+
+char* write_equation(char* eqn) {
+   char* open = "<em>";
+   char* close = "</em>";
+
+   char* out = malloc(strlen(eqn) + strlen(open) + strlen(close) + 1);
+
+   strcpy(out, open);
+   strcat(out, eqn);
+   strcat(out, close);
+
+   free(eqn);
+
+   return out;
+}
+
+char* write_url(char* url) {
+   char* open = "<span style=\"text-decoration:underline\">";
+   char* close = "</span>";
+
+   char* out = malloc(strlen(url) + strlen(open) + strlen(close) + 1);
+
+   strcpy(out, open);
+   strcat(out, url);
+   strcat(out, close);
+
+   free(url);
+
+   return out;
+}
+
+char* add_listitem(char* list, char* item) {
+   int size = strlen(item) + 6;
+
+   if (list == NULL) {
+      list = malloc(size);
+      list[0] = 0;
+   } else {
+      list = realloc(list, strlen(list) + size);
+   }
+
+   strcat(list, "<li>");
+   strcat(list, item);
+   strcat(list, "\n");
+
+   free(item);
+
+   return list;
+}
+
+char* concatenate(char* a, char* b) {
+   a = realloc(a, strlen(a) + strlen(b) + 1);
+
+   strcat(a, b);
+   free(b);
+
+   return a;
+}
+
+char* split_paragraphs(char* string) {
+   char* p = "\n<p>";
+
+   char* out = calloc(1,1);
+
+   regex_t regex;
+   regcomp(&regex, "\n\\s*\n", 0);
+
+   // Find a blank line, print up to it, and replace it
+   // with a paragraph break
+   regmatch_t matches[1];
+   int start = 0;
+   while (!regexec(&regex, string+start, 1, matches, 0)) {
+      // Prev paragraph ends at the start of a blank line
+      string[start+matches[0].rm_so] = 0;
+
+      out = realloc(out, strlen(out) + strlen(string+start) + strlen(p));
+      strcat(out, string+start);
+      strcat(out, p);
+
+      // Next paragraph starts after the end of a blank line
+      start += matches[0].rm_eo;
+   }
+
+   // Print trailing text
+   if (strlen(string+start) > 0) {
+      out = realloc(out, strlen(out) + strlen(string+start) + 1);
+      strcat(out, string+start);
+   }
+
+   regfree(&regex);
+   free(string);
 
    return out;
 }

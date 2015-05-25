@@ -15,11 +15,11 @@
 <INITIAL>"$"         { BEGIN(MATH); return DELIM; }
 <MATH>"$"            { BEGIN(INITIAL); return DELIM; }
 
-<MATH>"\{"           { yylval.str = "("; return TEXT; }
-<MATH>"\}"           { yylval.str = ")"; return TEXT; }
+<MATH>"\{"           { yylval.str = strdup("("); return TEXT; }
+<MATH>"\}"           { yylval.str = strdup(")"); return TEXT; }
 
-<MATH>\\sim          { yylval.str = "~"; return TEXT; }
-<MATH>\\times        { yylval.str = "x"; return TEXT; }
+<MATH>\\sim          { yylval.str = strdup("~"); return TEXT; }
+<MATH>\\times        { yylval.str = strdup("x"); return TEXT; }
 
 <MATH>[^${}\\]+      { yylval.str = strdup(yytext); return TEXT; }
 
@@ -28,14 +28,14 @@
 "\{"                 { return LBRACE; }
 "\}"                 { return RBRACE; }
 
-"---"                { yylval.str = "&#8212;"; return TEXT; }
-"--"                 { yylval.str = "&#8211;"; return TEXT; }
+"---"                { yylval.str = strdup("&#8212;"); return TEXT; }
+"--"                 { yylval.str = strdup("&#8211;"); return TEXT; }
 "-"                  { yylval.str = strdup(yytext); return TEXT; }
 
-"\\ "                { yylval.str = " "; return TEXT; }
+"\\ "                { yylval.str = strdup(" "); return TEXT; }
 "\\@"                ; /* intersentence spacing */
-"\\#"                { yylval.str = "#"; return TEXT; }
-"\\&"                { yylval.str = "&amp;"; return TEXT; }
+"\\#"                { yylval.str = strdup("#"); return TEXT; }
+"\\&"                { yylval.str = strdup("&amp;"); return TEXT; }
 "\\\\"               ; /* newline (this version is ignored) */
 
 \\begin\{itemize\}   { return LLIST; }
@@ -55,9 +55,9 @@
 \\opening            { yylval.str = strdup(yytext); return CVDATA; }
 \\closing            { yylval.str = strdup(yytext); return CVDATA; }
 
-\\newline            { yylval.str = "</br>\n"; return TEXT; }
+\\newline            { yylval.str = strdup("</br>\n"); return TEXT; }
 \\url                { return URL; }
-\\\"\{\\i\}          { yylval.str = "&iuml;"; return TEXT; }
+\\\"\{\\i\}          { yylval.str = strdup("&iuml;"); return TEXT; }
 
 <*>\\[a-z]+          { return MACRO; }
 
