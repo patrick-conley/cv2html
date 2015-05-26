@@ -55,7 +55,7 @@
 \\opening            { yylval.str = strdup(yytext); return CVDATA; }
 \\closing            { yylval.str = strdup(yytext); return CVDATA; }
 
-\\newline            { yylval.str = strdup("</br>\n"); return TEXT; }
+\\newline            { yylval.str = strdup("<br>\n"); return TEXT; }
 \\url                { return URL; }
 \\\"\{\\i\}          { yylval.str = strdup("&iuml;"); return TEXT; }
 

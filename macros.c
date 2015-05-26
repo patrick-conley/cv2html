@@ -141,8 +141,8 @@ char* write_equation(char* eqn) {
 }
 
 char* write_url(char* url) {
-   char* open = "<span style=\"text-decoration:underline\">";
-   char* close = "</span>";
+   char* open = "<em>";
+   char* close = "</em>";
 
    char* out = malloc(strlen(url) + strlen(open) + strlen(close) + 1);
 

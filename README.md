@@ -38,7 +38,6 @@ Output contains the following tags:
 
 - &lt;em&gt;
 - &lt;strong&gt;
-- &lt;span&gt;
 - &lt;ul&gt;
 - &lt;li&gt;
 - &lt;p&gt;
