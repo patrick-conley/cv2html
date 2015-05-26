@@ -68,29 +68,29 @@ contents : %empty
 
 section  : SECTION arg              { $$ = write_section($2); }
 
-cvitem   : CVITEM arg arg           { $$ = write_cvitem($2, $3); }
+cvitem   : CVITEM opts arg arg           { $$ = write_cvitem($3, $4); }
 
 cvlist   : cvlistdoubleitems        { $$ = write_list($1); }
 
-cvlistdoubleitems : CVLIST arg arg
+cvlistdoubleitems : CVLIST opts arg arg
                /* Obvious shift/reduce conflict, but as cvlist types aren't at
                 * all delimited, I don't think that's avoidable. An %empty
                 * rule just makes it worse.
                 */
                                     {
-                                       $$ = add_listitem(NULL, $2);
-                                       $$ = add_listitem($$, $3);
-                                    }
-         | cvlistdoubleitems CVLIST arg arg
-                                    {
-                                       $$ = add_listitem($1, $3);
+                                       $$ = add_listitem(NULL, $3);
                                        $$ = add_listitem($$, $4);
+                                    }
+         | cvlistdoubleitems CVLIST opts arg arg
+                                    {
+                                       $$ = add_listitem($1, $4);
+                                       $$ = add_listitem($$, $5);
                                     }
          ;
 
-cventry  : CVENTRY arg arg arg arg arg arg
+cventry  : CVENTRY opts arg arg arg arg arg arg
                            {
-                              $$ = write_cventry($2, $3, $4, $5, $6, $7);
+                              $$ = write_cventry($3, $4, $5, $6, $7, $8);
                            }
 
 cvlettertitle : CVLETTEROPEN arg
