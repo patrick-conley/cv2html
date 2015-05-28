@@ -37,6 +37,7 @@
 "\\#"                { yylval.str = strdup("#"); return TEXT; }
 "\\&"                { yylval.str = strdup("&amp;"); return TEXT; }
 "\\\\"               ; /* newline (this version is ignored) */
+"\\LaTeX"            { yylval.str = strdup("LaTeX"); return TEXT; }
 
 \\begin\{itemize\}   { return LLIST; }
 \\end\{itemize\}     { return RLIST; }
@@ -50,10 +51,7 @@
 \\cvlistdoubleitem   { return CVLIST; }
 \\cventry            { return CVENTRY; }
 
-\\firstname          { yylval.str = strdup(yytext); return CVDATA; }
-\\familyname         { yylval.str = strdup(yytext); return CVDATA; }
-\\opening            { yylval.str = strdup(yytext); return CVDATA; }
-\\closing            { yylval.str = strdup(yytext); return CVDATA; }
+\\(firstname|familyname|address|phone|email|opening|closing) { yylval.str = strdup(yytext); return CVDATA; }
 
 \\newline            { yylval.str = strdup("<br>\n"); return TEXT; }
 \\url                { return URL; }

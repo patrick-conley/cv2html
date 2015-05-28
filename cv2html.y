@@ -11,8 +11,8 @@ extern int yylineno;
 
 char* opening = NULL;
 char* closing = NULL;
-char* firstname = NULL;
-char* lastname = NULL;
+
+struct contact info;
 
 void yyerror(const char *str)
 {
@@ -101,7 +101,7 @@ cvlettertitle : CVLETTEROPEN arg
 
 cvletterclose : CVLETTERCLOSE arg
                            {
-                              $$ = write_cvletterclose(closing, firstname, lastname);
+                              $$ = write_cvletterclose(closing, info);
                               free($2);
                            }
 
@@ -111,11 +111,22 @@ cvdata   : CVDATA arg      {
                               } else if (!strcmp($1, "\\closing")) {
                                  closing = $2;
                               } else if (!strcmp($1, "\\firstname")) {
-                                 firstname = $2;
+                                 info.firstname = $2;
                               } else if (!strcmp($1, "\\familyname")) {
-                                 lastname = $2;
+                                 info.lastname = $2;
+                              } else if (!strcmp($1, "\\phone")) {
+                                 info.phone = $2;
+                              } else if (!strcmp($1, "\\email")) {
+                                 info.email = $2;
                               }
                            }
+         | CVDATA arg arg  {
+                              if (!strcmp($1, "\\address")) {
+                                 info.address1 = $2;
+                                 info.address2 = $3;
+                              }
+                           }
+         ;
 
 /* discarded */
 macro    : MACRO opts args

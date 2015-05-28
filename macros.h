@@ -6,6 +6,15 @@
  * noted
  */
 
+struct contact {
+   char* firstname;
+   char* lastname;
+   char* address1;
+   char* address2;
+   char* phone;
+   char* email;
+};
+
 char* write_section(char* arg);
 
 char* write_cvitem(char* header, char* contents);
@@ -18,10 +27,10 @@ char* write_cventry(char* date, char* title, char* group, char* place, char*
 char* write_cvlettertitle(char* message);
 
 /*
- * firstname and familyname should be set first with \firstname and
- * \familyname, respectively. If either is null, then neither is printed.
+ * Contact information should be set first, with the appropriate macros. These
+ * strings are not freed.
  */
-char* write_cvletterclose(char* message, char* firstname, char* familyname);
+char* write_cvletterclose(char* message, struct contact info);
 
 char* write_equation(char* eqn);
 
