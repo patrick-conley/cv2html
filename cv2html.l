@@ -32,6 +32,7 @@
 "--"                 { yylval.str = strdup("&#8211;"); return TEXT; }
 "-"                  { yylval.str = strdup(yytext); return TEXT; }
 
+"~"                  { yylval.str = strdup(" "); return TEXT; } /* NBSP */
 "\\ "                { yylval.str = strdup(" "); return TEXT; }
 "\\@"                ; /* intersentence spacing */
 "\\#"                { yylval.str = strdup("#"); return TEXT; }
@@ -59,7 +60,7 @@
 
 <*>\\[a-z]+          { return MACRO; }
 
-[^\[\]{}%$\\\-]+     { yylval.str = strdup(yytext); return TEXT; }
+[^\[\]{}%$~\\\-]+     { yylval.str = strdup(yytext); return TEXT; }
 
 %%
 

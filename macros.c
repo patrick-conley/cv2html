@@ -114,22 +114,26 @@ char* write_cvletterclose(char* message, struct contact info) {
    if (message == NULL) {
       out = strdup("<p>");
    } else {
-      out = malloc(strlen(message) + 4);
+      out = malloc(strlen(message) + strlen(linebreak) + 4);
       strcpy(out, "<p>");
       strcat(out, message);
+      strcat(out, linebreak);
       free(message);
    }
 
    if (info.firstname != NULL && info.lastname != NULL) {
-      out = realloc(out, strlen(out) + strlen(info.firstname) + strlen(info.lastname) + 7);
+      out = realloc(out, strlen(out) + strlen(info.firstname) +
+            strlen(info.lastname) + strlen(linebreak)*2 + 2);
       strcat(out, info.firstname);
       strcat(out, " ");
       strcat(out, info.lastname);
       strcat(out, linebreak);
+      strcat(out, linebreak);
    }
 
    if (info.address1 != NULL) { /* implies addr2 != NULL) */
-      out = realloc(out, strlen(out) + strlen(info.address1) + strlen(info.address2) + 11);
+      out = realloc(out, strlen(out) + strlen(info.address1) +
+            strlen(info.address2) + strlen(linebreak) + 1);
       strcat(out, info.address1);
       strcat(out, linebreak);
       strcat(out, info.address2);
@@ -137,13 +141,15 @@ char* write_cvletterclose(char* message, struct contact info) {
    }
 
    if (info.phone != NULL) {
-      out = realloc(out, strlen(out) + strlen(info.phone));
+      out = realloc(out, strlen(out) + strlen(info.phone) + strlen(linebreak)
+            + 1);
       strcat(out, info.phone);
       strcat(out, linebreak);
    }
 
    if (info.email != NULL) {
-      out = realloc(out, strlen(out) + strlen(info.email));
+      out = realloc(out, strlen(out) + strlen(info.email) + strlen(linebreak)
+            + 1);
       strcat(out, info.email);
       strcat(out, linebreak);
    }
